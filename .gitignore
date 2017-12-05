@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 
-.xlsx
-.txt
-
 .DS_Store
+*.dcf
+*.csv
+*.xlsx

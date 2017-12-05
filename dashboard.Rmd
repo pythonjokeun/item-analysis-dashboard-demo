@@ -1,68 +1,26 @@
 ---
-title: "Online Retail Transaction Analytics"
-runtime: shiny
+title: "Item Analysis Dashboard"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
-    source_code: embed
+runtime: shiny
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, message=FALSE}
 library(shiny)
 library(highcharter)
 library(tidyverse)
+library(lubridate)
 
-options(scipen = 999)
-
-# download.file(
-#   "http://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx",
-#   "data.xlsx"
-# )
-
-dataset = readxl::read_excel("data.xlsx") %>%
-  janitor::clean_names()
-
-# cleansing
-clean = dataset %>%
-  filter(
-    !is.na(customerid),
-    quantity > 0,
-    unitprice > 0,
-    str_length(stockcode) >= 5,
-    str_length(stockcode) < 12
-  ) %>%
-  mutate(total_spend = quantity * unitprice)
-
-# identify valuable items
-pareto = clean %>%
-  select(stockcode, total_spend) %>%
-  group_by(stockcode) %>%
-  summarise(total_spend = sum(total_spend)) %>%
-  ungroup() %>%
-  arrange(desc(total_spend)) %>%
-  mutate(
-    running_trx = cumsum(total_spend),
-    running_trx_prop = running_trx / sum(total_spend),
-    class = case_when(
-      running_trx_prop <= 0.8 ~ "A",
-      running_trx_prop <= 1 ~ "B"
-    )
-  ) %>%
-  select(stockcode, class)
-
-# valuable items
-class_a = pareto %>%
-  filter(class == "A") %>%
-  left_join(clean, by = "stockcode") %>%
-  select(stockcode, description, invoicedate, quantity, country)
+dataset = read_csv("data.csv")
 
 # functions
 get_trx_wday_vs_hour_heatmap = function(desc) {
-  df = class_a %>%
+  df = dataset %>%
     filter(description == desc) %>%
     mutate(
-      wday = lubridate::wday(invoicedate, label = T),
-      hour = lubridate::hour(invoicedate)
+      wday = wday(invoicedate, label = T),
+      hour = hour(invoicedate)
     ) %>%
     group_by(wday, hour) %>%
     summarise(quantity = sum(quantity)) %>%
@@ -88,13 +46,13 @@ get_trx_wday_vs_hour_heatmap = function(desc) {
 }
 
 get_trx_history_chart = function(desc) {
-  df = class_a %>%
+  df = dataset %>%
     filter(description == desc) %>%
     transmute(
       stockcode,
       invoicedate = invoicedate %>%
         str_sub(1, 10) %>%
-        lubridate::ymd(),
+        ymd(),
       quantity
     ) %>%
     group_by(invoicedate) %>%
@@ -125,7 +83,7 @@ get_trx_history_chart = function(desc) {
 }
 
 get_trx_by_country_chart = function(desc) {
-  df = class_a %>%
+  df = dataset %>%
     filter(description == desc, country != "United Kingdom") %>%
     select(country, quantity) %>%
     group_by(country) %>%
@@ -154,7 +112,7 @@ Sidebar {.sidebar data-width=330}
 
 Analysis on purchased items from UK-based and registered non-store online retail. All transactions on this analysis occur between 01/12/2010 and 09/12/2011. For more information about the dataset for this analysis, please have a look at [this link](http://archive.ics.uci.edu/ml/datasets/online+retail). 
 
-Items available are limited using [80/20 rule](https://en.wikipedia.org/wiki/Pareto_principle). More detail about how to do it in **R**, have a look at source code provided.
+Items available are limited using [80/20 rule](https://en.wikipedia.org/wiki/Pareto_principle). More detail about how to do it, have a look at source code [here](https://raw.githubusercontent.com/iamsniffles/item-analysis-dashboard-demo/master/dashboard.Rmd).
 
 ---
 
@@ -162,7 +120,7 @@ Items available are limited using [80/20 rule](https://en.wikipedia.org/wiki/Par
 selectInput(
   "product_desc", 
   label = tags$b("Select an item to analyze:"), 
-  choices = unique(class_a$description), 
+  choices = unique(dataset$description), 
   selected = "WHITE HANGING HEART T-LIGHT HOLDER",
   selectize = TRUE,
   width = "100%"
