@@ -118,9 +118,7 @@ Description {.sidebar data-width=330}
 
 Analysis on purchased items from UK-based and registered non-store online retail. All transactions on this analysis occur between 01/12/2010 and 09/12/2011. For more information about the dataset for this analysis, please have a look at [this link](http://archive.ics.uci.edu/ml/datasets/online+retail). 
 
-Note that items available for analysis are limited using [80/20 rule](https://en.wikipedia.org/wiki/Pareto_principle). 
-
-More detail on how to reproduce this dashboard available at [this repo](https://github.com/iamsniffles/item-analysis-dashboard-demo/).
+Note that items available for analysis are limited using [80/20 rule](https://en.wikipedia.org/wiki/Pareto_principle). More detail on how to reproduce this dashboard available at [this repo](https://github.com/iamsniffles/item-analysis-dashboard-demo/).
 
 ---
 
