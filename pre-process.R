@@ -1,11 +1,11 @@
 library(tidyverse)
 library(lubridate)
 
-# # download data
-# download.file(
-#   "http://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx",
-#   "data.xlsx"
-# )
+# download data
+download.file(
+  "http://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx",
+  "data.xlsx"
+)
 
 dataset = readxl::read_excel("data.xlsx") %>%
   janitor::clean_names()
@@ -39,8 +39,17 @@ pareto = clean %>%
   select(stockcode, class)
 
 # valuable items
-pareto %>%
+pareto = pareto %>%
   filter(class == "A") %>%
   left_join(clean, by = "stockcode") %>%
-  select(stockcode, description, invoicedate, quantity, country) %>%
-  write_csv("data.csv")
+  select(stockcode, description, invoicedate, quantity, country)
+
+sc = pareto %>%
+  group_by(stockcode) %>%
+  summarise(n = n()) %>%
+  filter(n > 1) %>%
+  pull(stockcode)
+
+pareto %>%
+  filter(stockcode %in% sc) %>%
+  write_rds("dataset.rds")
